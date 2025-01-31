@@ -1,0 +1,43 @@
+#!/bin/bash
+#SBATCH --time=1140
+#SBATCH --job-name=vt1_satellite-image-generation
+#SBATCH --ntasks=1
+#SBATCH --nodes=1
+#SBATCH --gres=gpu:1
+#SBATCH --mem=32G 
+#SBATCH --account=cai_exp
+#SBATCH --partition=p_gpu_all
+#SBATCH --output=/cluster/home/saaf/log/%j_%N__ex02.out
+#SBATCH --error=/cluster/home/saaf/log/%j_%N__ex02.err
+
+
+out_file_path=/cluster/home/saaf/temp/vt1_satellite-image-generation_$(hostname)_$(date +"%F_%T.%3N")_start.txt
+
+echo "Start Training" >> $out_file_path
+
+module load python/3.10.14
+
+export UV_PROJECT_ENVIRONEMENT='/raid/persistent_scratch/saaf/venvs/ac3t'
+export UV_LINK_MODE=copy
+
+DIRECTORY='/raid/persistent_scratch/saaf/vt1/dataset'
+if [ ! -d "$DIRECTORY/lulc_segmentation_as17_npy" ]; then
+  echo "$DIRECTORY does not exist. Copy Dataset"
+  mkdir -p $DIRECTORY
+
+  echo "Copy Base ZIP"
+  cp -r ./dataset/base.zip $DIRECTORY
+
+  echo "Unzip Base Files"
+  unzip "$DIRECTORY/base.zip" -d $DIRECTORY
+
+  echo "Copy Segmentations ZIP"
+  cp -r ./dataset/lulc_segmentation_as17_npy.zip $DIRECTORY
+
+  echo "Unzip Segmentations Files"
+  unzip "$DIRECTORY/lulc_segmentation_as17_npy.zip" -d $DIRECTORY
+fi
+
+uv run ./src/train.py
+
+echo "Training Completed" >> $out_file_path

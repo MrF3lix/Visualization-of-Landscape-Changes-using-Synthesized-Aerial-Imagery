@@ -1,0 +1,8 @@
+.conda
+ddpm-**
+24-**
+.venv
+.DS_Store
+**/*.pyc
+__pycache__
+/archive
